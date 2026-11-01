@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINE Friend</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+  
+  body { 
+    background: radial-gradient(circle at center, #1a1035 0%, #05050a 100%);
+    color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+  }
+
+  header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 12px 20px; background: rgba(15, 15, 25, 0.8); 
+    backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .logo-area { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { font-size: 24px; color: #c084fc; text-shadow: 0 0 15px #c084fc; }
+  .logo-text h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
+  
+  .controls { display: flex; gap: 10px; align-items: center; }
+  .toggle-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600;}
+  .toggle-btn.active { background: #22c55e; border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+
+  .main-content { display: flex; flex: 1; overflow: hidden; padding: 12px; gap: 12px; }
+  
+  .ai-grid { 
+    flex: 1.5; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; height: 100%;
+  }
+  
+  .ai-card { 
+    position: relative; border-radius: 16px; background: linear-gradient(180deg, rgba(25, 25, 40, 0.6) 0%, rgba(10, 10, 15, 0.8) 100%);
+    border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; transition: 0.3s;
+  }
+  
+  .ai-card.thinking { border-color: rgba(255,255,255,0.4); box-shadow: inset 0 0 50px rgba(255,255,255,0.1); }
+  .ai-card.speaking { transform: scale(1.02); border-color: #c084fc; box-shadow: inset 0 0 60px rgba(192, 132, 252, 0.2); z-index: 2;}
+
+  .card-khokan { border-color: rgba(34, 197, 94, 0.3); }
+  .card-ayan { border-color: rgba(0, 102, 255, 0.3); }
+  .card-ravi { border-color: rgba(255, 187, 0, 0.3); }
+  .card-luna { border-color: rgba(153, 51, 255, 0.3); }
+
+  .card-header { position: absolute; top: 10px; left: 10px; display: flex; align-items: center; gap: 8px; width: calc(100% - 20px); justify-content: space-between; z-index: 10;}
+  .ai-info { display: flex; align-items: center; gap: 8px; }
+  .avatar-dot { width: 10px; height: 10px; border-radius: 50%; }
+  
+  .card-khokan .avatar-dot { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+  .card-ayan .avatar-dot { background: #0066ff; box-shadow: 0 0 10px #0066ff; }
+  .card-ravi .avatar-dot { background: #ffbb00; box-shadow: 0 0 10px #ffbb00; }
+  .card-luna .avatar-dot { background: #9933ff; box-shadow: 0 0 10px #9933ff; }
+  
+  .ai-name { font-size: 13px; font-weight: 600; }
+  .ai-status { font-size: 10px; color: #a1a1aa; }
+
+  .orb-container { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 10px; }
+  .orb { width: 60px; height: 60px; border-radius: 50%; position: relative; z-index: 2; transition: 0.3s; }
+  
+  .card-khokan .orb { background: radial-gradient(circle at 30% 30%, #7effaa, #00ff55, #008033); box-shadow: 0 0 30px #00ff55; }
+  .card-ayan .orb { background: radial-gradient(circle at 30% 30%, #7eb8ff, #0066ff, #003380); box-shadow: 0 0 30px #0066ff; }
+  .card-ravi .orb { background: radial-gradient(circle at 30% 30%, #ffe07e, #ffbb00, #805d00); box-shadow: 0 0 30px #ffbb00; }
+  .card-luna .orb { background: radial-gradient(circle at 30% 30%, #c27eff, #9933ff, #4d0080); box-shadow: 0 0 30px #9933ff; }
+
+  .ai-card.speaking .orb { transform: scale(1.2); }
+  .ai-card.thinking .orb { animation: pulseOrb 1s infinite alternate; }
+  @keyframes pulseOrb { from { opacity: 0.7; } to { opacity: 1; } }
+
+  .orb-ring { position: absolute; width: 110px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); transform: rotate(-20deg); z-index: 1; }
+
+  .sidebar { 
+    flex: 1; background: rgba(15, 15, 25, 0.8); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); 
+    display: flex; flex-direction: column; height: 100%; overflow: hidden; backdrop-filter: blur(10px);
+  }
+  .chat-area { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .chat-msg { display: flex; gap: 8px; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+  
+  .chat-av { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: bold;}
+  .msg-content { display: flex; flex-direction: column; gap: 3px; max-width: 85%; }
+  .msg-name { font-size: 10px; font-weight: 600; }
+  .msg-text { font-size: 12px; color: #e4e4e7; line-height: 1.4; background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 0 12px 12px 12px; white-space: pre-wrap; word-break: break-word; }
+  
+  .msg-khokan .msg-name { color: #22c55e; } .msg-khokan .chat-av { background: #22c55e; } .msg-khokan { flex-direction: row-reverse; } .msg-khokan .msg-text { background: rgba(34, 197, 94, 0.15); border-radius: 12px 0 12px 12px; }
+  .msg-ayan .msg-name { color: #0066ff; } .msg-ayan .chat-av { background: #0066ff; }
+  .msg-ravi .msg-name { color: #ffbb00; } .msg-ravi .chat-av { background: #ffbb00; }
+  .msg-luna .msg-name { color: #9933ff; } .msg-luna .chat-av { background: #9933ff; }
+
+  .chat-input-area { padding: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 6px; align-items: center; }
+  .chat-input-area input { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px; border-radius: 20px; color: #fff; font-size: 13px; outline: none; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 50%; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.3s; flex-shrink:0;}
+  .mic-btn { background: #2a2f3d; } .mic-btn.listening { background: #ef4444; animation: pulse 1.5s infinite; }
+  .send-btn { background: #c084fc; }
+
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+  /* Settings modal (API keys are stored only in this browser, not in the code) */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #14141f; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; width: 100%; max-width: 420px; }
+  .modal h2 { font-size: 15px; margin-bottom: 4px; }
+  .modal p { font-size: 11px; color: #a1a1aa; margin-bottom: 12px; line-height: 1.5; }
+  .modal label { font-size: 11px; color: #d4d4d8; display: block; margin: 8px 0 4px; }
+  .modal input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 9px 12px; border-radius: 10px; color: #fff; font-size: 12px; outline: none; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+  .modal-actions button { padding: 8px 16px; border-radius: 20px; border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-save { background: #c084fc; } .btn-cancel { background: #2a2f3d; }
+
+  @media (max-width: 768px) {
+    .main-content { flex-direction: column; }
+    .ai-grid { flex: none; height: 45vh; }
+    .sidebar { flex: 1; }
+    header { flex-direction: column; gap: 8px; padding: 10px; }
+    .logo-text h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <i class="fa-solid fa-cannabis logo-icon"></i>
+    <div class="logo-text"><h1>INFINE Friend</h1></div>
+  </div>
+  <div class="controls">
+    <button class="toggle-btn" onclick="openSettings()"><i class="fa-solid fa-key"></i> Keys</button>
+    <button class="toggle-btn active" id="voiceToggle" onclick="toggleVoice()">
+      <i class="fa-solid fa-volume-high"></i> Voice On
+    </button>
+  </div>
+</header>
+
+<div class="main-content">
+  <div class="ai-grid">
+    <div class="ai-card card-khokan" id="card-khokan">
+      <div class="card-header"><div class="ai-info"><div class="avatar-dot"></div><div class="ai-name">খোকন (তুই)</div></div></div>
+      <div class="orb-container"><div class="orb-ring"></div><div class="orb"></div></div>
+    </div>
+    <div class="ai-card card-ayan" id="card-ayan">
+      <div class="card-header"><div class="ai-info"><div class="avatar-dot"></div><div><div class="ai-name">অয়ন</div><div class="ai-status" id="status-ayan">শুনছে...</div></div></div></div>
+      <div class="orb-container"><div class="orb-ring"></div><div class="orb"></div></div>
+    </div>
+    <div class="ai-card card-ravi" id="card-ravi">
+      <div class="card-header"><div class="ai-info"><div class="avatar-dot"></div><div><div class="ai-name">রবি</div><div class="ai-status" id="status-ravi">শুনছে...</div></div></div></div>
+      <div class="orb-container"><div class="orb-ring"></div><div class="orb"></div></div>
+    </div>
+    <div class="ai-card card-luna" id="card-luna">
+      <div class="card-header"><div class="ai-info"><div class="avatar-dot"></div><div><div class="ai-name">লুনা</div><div class="ai-status" id="status-luna">শুনছে...</div></div></div></div>
+      <div class="orb-container"><div class="orb-ring"></div><div class="orb"></div></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="chat-area" id="chatArea">
+      <div class="chat-msg msg-ayan">
+        <div class="chat-av">অ</div>
+        <div class="msg-content">
+          <div class="msg-name">অয়ন</div>
+          <div class="msg-text">কিরে খোকন, কেমন আছিস? আমরা সবাই তোর জন্য অপেক্ষা করছিলাম।</div>
+        </div>
+      </div>
+      <div class="chat-msg msg-ravi">
+        <div class="chat-av">র</div>
+        <div class="msg-content">
+          <div class="msg-name">রবি</div>
+          <div class="msg-text">হ্যাঁ রে! আজ আবার কী নতুন প্ল্যান করেছিস? 😂</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="টাইপ কর বা মাইকে কথা বল..." onkeypress="handleEnter(event)">
+      <button class="icon-btn mic-btn" id="micBtn" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i></button>
+      <button class="icon-btn send-btn" onclick="sendTextMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- API Key Settings -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <h2><i class="fa-solid fa-key"></i> API Keys</h2>
+    <p>Key গুলো শুধু তোর এই ব্রাউজারে সেভ হবে। কোডে বা ফাইলে কোথাও থাকবে না। একবার দিলেই হবে।</p>
+    <label>অয়ন — Gemini Key</label>
+    <input type="password" id="k_gemini" autocomplete="off" placeholder="Gemini API key">
+    <label>রবি — Groq Key</label>
+    <input type="password" id="k_groq" autocomplete="off" placeholder="Groq API key">
+    <label>লুনা — OpenRouter Key</label>
+    <input type="password" id="k_openrouter" autocomplete="off" placeholder="OpenRouter API key">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">বাতিল</button>
+      <button class="btn-save" onclick="saveSettings()">সেভ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* =========================================
+     🔑 API KEYS (localStorage-এ থাকে, কোডে নেই)
+     ========================================= */
+  const KEYS = { gemini: "", groq: "", openrouter: "" };
+  const STORE_NAME = "infine_friend_keys";
+
+  // মডেলের নাম এক জায়গায়, বদলাতে চাইলে এখানে
+  const MODELS = {
+    gemini: "gemini-2.5-flash",
+    groq: "llama-3.1-8b-instant",
+    openrouter: "meta-llama/llama-3.1-8b-instruct:free"
+  };
+
+  function loadKeys() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_NAME) || "{}");
+      KEYS.gemini = saved.gemini || "";
+      KEYS.groq = saved.groq || "";
+      KEYS.openrouter = saved.openrouter || "";
+    } catch (e) {}
+  }
+
+  function openSettings() {
+    document.getElementById('k_gemini').value = KEYS.gemini;
+    document.getElementById('k_groq').value = KEYS.groq;
+    document.getElementById('k_openrouter').value = KEYS.openrouter;
+    document.getElementById('settingsModal').classList.add('open');
+  }
+  function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+  function saveSettings() {
+    KEYS.gemini = document.getElementById('k_gemini').value.trim();
+    KEYS.groq = document.getElementById('k_groq').value.trim();
+    KEYS.openrouter = document.getElementById('k_openrouter').value.trim();
+    try { localStorage.setItem(STORE_NAME, JSON.stringify(KEYS)); } catch (e) {}
+    closeSettings();
+  }
+
+  loadKeys();
+  if (!KEYS.gemini && !KEYS.groq && !KEYS.openrouter) openSettings();
+
+  /* =========================================
+     ⚙️ STATE & CONFIG
+     ========================================= */
+  let isVoiceOn = true;
+  let isListening = false;
+  let isProcessing = false;
+  let chatHistory = []; 
+  let recognition;
+  let currentSpeech = null;
+
+  const AIs = {
+    ayan: {
+      name: "অয়ন", initial: "অ", color: "#0066ff",
+      persona: "তুমি গ্রুপের যুক্তিবাদী এবং শান্ত বন্ধু। তুমি গুছিয়ে, বুদ্ধি দিয়ে কথা বলো। তবে তোর ভেতরেও রাগ, দুঃখ, মজা সব ইমোশন আছে। তুই খোকনের খুব ভালো বন্ধু। কথায় ইমোজি ব্যবহার করিস।"
+    },
+    ravi: {
+      name: "রবি", initial: "র", color: "#ffbb00",
+      persona: "তুমি গ্রুপের মজার, চটপটে এবং দুষ্টু বন্ধু। তুমি সবসময় হাসি-ঠাট্টা করে কথা বলো। কেউ ভুল বললে মজা করে চ্যালেঞ্জ করো। তুই খোকনের খুব ভালো বন্ধু। কথায় প্রচুর ইমোজি ব্যবহার করিস।"
+    },
+    luna: {
+      name: "লুনা", initial: "লু", color: "#9933ff",
+      persona: "তুমি গ্রুপের শান্ত, ইমোশনাল এবং caring বন্ধু। তুমি সবার খোঁজ নাও, মন খারাপ থাকলে ভরসা দাও। তুই খোকনের খুব ভালো বন্ধু। কথায় নরমভাবে ইমোজি ব্যবহার করিস।"
+    }
+  };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* =========================================
+     🎤 VOICE SYSTEM (Web Speech API)
+     ========================================= */
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'bn-IN';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      window.speechSynthesis.cancel();
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      if (transcript.trim() !== "") {
+        addMessageToChat('khokan', transcript);
+        triggerAIResponses(transcript);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.log("Mic Error:", event.error);
+      if(event.error === 'not-allowed') alert("অনুগ্রহ করে ব্রাউজারে মাইক ব্যবহারের অনুমতি দিন।");
+    };
+
+    recognition.onend = () => {
+      if(isListening && isVoiceOn) {
+        try { recognition.start(); } catch(e) {}
+      }
+    };
+  } else {
+    alert("তোমার ব্রাউজার ভয়েস সাপোর্ট করে না। Google Chrome ব্যবহার করো।");
+  }
+
+  function toggleMic() {
+    if(!recognition) return;
+    if(isListening) {
+      recognition.stop();
+      isListening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+    } else {
+      window.speechSynthesis.cancel();
+      try { recognition.start(); } catch(e) {}
+      isListening = true;
+      document.getElementById('micBtn').classList.add('listening');
+    }
+  }
+
+  function toggleVoice() {
+    isVoiceOn = !isVoiceOn;
+    const btn = document.getElementById('voiceToggle');
+    if(isVoiceOn) {
+      btn.classList.add('active');
+      btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Voice On';
+    } else {
+      btn.classList.remove('active');
+      btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> Voice Off';
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  /* =========================================
+     💬 CHAT SYSTEM
+     ========================================= */
+  function handleEnter(e) { if(e.key === 'Enter') sendTextMessage(); }
+
+  function sendTextMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(text === "" || isProcessing) return;
+    
+    input.value = "";
+    window.speechSynthesis.cancel();
+
+    addMessageToChat('khokan', text);
+    triggerAIResponses(text);
+  }
+
+  function addMessageToChat(sender, text) {
+    const chatArea = document.getElementById('chatArea');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-msg msg-${sender}`;
+    
+    let name = sender === 'khokan' ? 'খোকন (তুই)' : AIs[sender].name;
+    let initial = sender === 'khokan' ? 'খ' : AIs[sender].initial;
+    
+    msgDiv.innerHTML = `
+      <div class="chat-av">${initial}</div>
+      <div class="msg-content">
+        <div class="msg-name">${name}</div>
+        <div class="msg-text">${escapeHtml(text)}</div>
+      </div>
+    `;
+    chatArea.appendChild(msgDiv);
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+    chatHistory.push({ sender: name, text: text });
+    if(chatHistory.length > 15) chatHistory.shift();
+  }
+
+  function updateAIStatus(aiKey, status) {
+    const statusEl = document.getElementById(`status-${aiKey}`);
+    const cardEl = document.getElementById(`card-${aiKey}`);
+    
+    if(status === 'thinking') {
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ভাবছে...';
+      cardEl.classList.add('thinking');
+    } else if(status === 'speaking') {
+      statusEl.innerHTML = '<i class="fa-solid fa-comment-dots"></i> বলছে...';
+      cardEl.classList.remove('thinking');
+      cardEl.classList.add('speaking');
+    } else if(status === 'nokey') {
+      statusEl.textContent = 'Key নেই';
+      cardEl.classList.remove('thinking', 'speaking');
+    } else if(status === 'error') {
+      statusEl.textContent = 'সমস্যা হয়েছে';
+      cardEl.classList.remove('thinking', 'speaking');
+    } else {
+      statusEl.innerHTML = 'শুনছে...';
+      cardEl.classList.remove('thinking', 'speaking');
+    }
+  }
+
+  /* =========================================
+     🧠 AI RESPONSE ENGINE (API CALLS)
+     ========================================= */
+  async function triggerAIResponses(userText) {
+    if(isProcessing) return;
+    isProcessing = true;
+
+    const sequence = ['ayan', 'ravi', 'luna'];
+    
+    for(let aiKey of sequence) {
+      await getAIResponse(aiKey, userText);
+      await new Promise(r => setTimeout(r, 1000)); 
+    }
+
+    isProcessing = false;
+  }
+
+  async function getAIResponse(aiKey, userText) {
+    const ai = AIs[aiKey];
+    const keyName = aiKey === 'ayan' ? 'gemini' : aiKey === 'ravi' ? 'groq' : 'openrouter';
+
+    if(!KEYS[keyName]) { updateAIStatus(aiKey, 'nokey'); return; }
+    updateAIStatus(aiKey, 'thinking');
+
+    let historyContext = chatHistory.map(h => `${h.sender}: ${h.text}`).join('\n');
+    const systemPrompt = `তুমি ${ai.name}। ${ai.persona}। তুমি খোকন (Khokan) এবং তোর বন্ধুদের (অয়ন, রবি, লুনা) সাথে গ্রুপ চ্যাটে আছিস। নিচের চ্যাট হিস্ট্রি পড়ে খোকনের শেষ কথার উত্তর দে। তবে মাথায় রাখিস, তুই একা উত্তর দিচ্ছিস না। তাই খুব বেশি বড় উত্তর দিস না। মানুষের মতো, বন্ধুর মতো স্বাভাবিকভাবে বাংলায় উত্তর দে।`;
+    const prompt = `চ্যাট হিস্ট্রি:\n${historyContext}\n\nখোকনের শেষ কথা: "${userText}"\n\nএখন তুই (${ai.name}) স্বাভাবিকভাবে উত্তর দে:`;
+
+    try {
+      let aiText = "";
+
+      if(aiKey === 'ayan') {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODELS.gemini}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KEYS.gemini },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 200, thinkingConfig: { thinkingBudget: 0 } }
+          })
+        });
+        const data = await res.json();
+        if(data.candidates && data.candidates[0].content) aiText = data.candidates[0].content.parts[0].text.trim();
+        else console.log("Ayan (Gemini) error:", data.error ? data.error.message : data);
+
+      } else if(aiKey === 'ravi') {
+        const res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${KEYS.groq}` },
+          body: JSON.stringify({
+            model: MODELS.groq,
+            messages: [ { role: "system", content: systemPrompt }, { role: "user", content: prompt } ],
+            temperature: 0.9, max_tokens: 200
+          })
+        });
+        const data = await res.json();
+        if(data.choices) aiText = data.choices[0].message.content.trim();
+        else console.log("Ravi (Groq) error:", data.error ? data.error.message : data);
+
+      } else if(aiKey === 'luna') {
+        const res = await fetch(`https://openrouter.ai/api/v1/chat/completions`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${KEYS.openrouter}`,
+            'X-Title': 'INFINE Friend'
+          },
+          body: JSON.stringify({
+            model: MODELS.openrouter,
+            messages: [ { role: "system", content: systemPrompt }, { role: "user", content: prompt } ],
+            temperature: 0.6, max_tokens: 200
+          })
+        });
+        const data = await res.json();
+        if(data.choices) aiText = data.choices[0].message.content.trim();
+        else console.log("Luna (OpenRouter) error:", data.error ? data.error.message : data);
+      }
+
+      if(aiText) {
+        updateAIStatus(aiKey, 'speaking');
+        addMessageToChat(aiKey, aiText);
+        if(isVoiceOn) await speakText(aiText, aiKey);
+        updateAIStatus(aiKey, 'listening');
+      } else {
+        updateAIStatus(aiKey, 'error');
+      }
+    } catch (error) {
+      console.error(`API Error (${aiKey}):`, error);
+      updateAIStatus(aiKey, 'error');
+    }
+  }
+
+  /* =========================================
+     🔊 TEXT TO SPEECH (বাংলা ভয়েস)
+     ========================================= */
+  function speakText(text, aiKey) {
+    return new Promise((resolve) => {
+      if (!isVoiceOn) { resolve(); return; }
+
+      window.speechSynthesis.cancel(); 
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'bn-IN'; 
+      utterance.rate = 1.0;
+      
+      if(aiKey === 'luna') utterance.pitch = 1.2;
+      else if(aiKey === 'ravi') utterance.pitch = 1.1;
+      else utterance.pitch = 0.9;
+
+      utterance.onend = () => { resolve(); };
+      utterance.onerror = () => { resolve(); };
+
+      currentSpeech = utterance;
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
+</script>
+</body>
+</html>
